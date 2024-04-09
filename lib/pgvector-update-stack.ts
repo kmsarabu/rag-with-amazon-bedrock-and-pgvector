@@ -75,8 +75,17 @@ export class PGVectorUpdateStack extends cdk.Stack {
             ],
         resources: [props.databaseCreds],
     });
+
+    const smPolicyStatementBedRock = new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+            "bedrock:InvokeModel"
+            ],
+        resources: ['*'],
+    });
+
     const smPolicyDBCreds = new iam.Policy(this, "dbCredsSecretsManagerPolicy", {
-        statements : [smPolicyStatementDBCreds]
+        statements : [smPolicyStatementDBCreds, smPolicyStatementBedRock]
     });
     pgvectorUpdateFn.role?.attachInlinePolicy(smPolicyDBCreds);
 

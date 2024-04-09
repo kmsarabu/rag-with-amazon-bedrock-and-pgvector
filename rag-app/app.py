@@ -34,8 +34,6 @@ if os.environ.get("VERBOSE", "").lower() == "true":
     log_level = logging.DEBUG
 logging.basicConfig(level=log_level, format=LOGGING_FORMAT)
 
-os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
-
 # get collection name
 collection = os.environ.get(COLLECTION_ENV_VAR)
 if not collection:
@@ -134,7 +132,7 @@ def write_top_bar():
     with col2:
         selected_provider = sys.argv[1]
         provider = selected_provider.capitalize()
-        header = f"An AI App powered by PGVector (on Amazon RDS) and {provider}!"
+        header = f"An AI App for Automotive Maintenance - Powered by PGVector (on Amazon RDS) and {provider}!"
         st.write(f"<h3 class='main-header'>{header}</h3>", unsafe_allow_html=True)
     with col3:
         clear = st.button("Clear Chat")

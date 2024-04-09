@@ -34,12 +34,6 @@ if __name__ == "__main__":
   if not secret_name:
      raise MissingEnvironmentVariable(f"{DB_SECRET_ENV_VAR} environment variable is required")
   streamlit_secrets.update(hfn.get_secret_from_name(secret_name))
-  
-  # open ai api key fetch
-  openai_secret = os.environ.get(API_KEY_SECRET_ENV_VAR)
-  if not openai_secret:
-     raise MissingEnvironmentVariable(f"{API_KEY_SECRET_ENV_VAR} environment variable is required")
-  streamlit_secrets["OPENAI_API_KEY"] = hfn.get_secret_from_name(openai_secret, kv=False)
 
   LOGGER.info("Writing streamlit secrets")
   with open("/root/.streamlit/secrets.toml", "w") as file:

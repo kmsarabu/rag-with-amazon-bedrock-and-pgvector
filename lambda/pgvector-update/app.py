@@ -5,15 +5,15 @@ import os
 import boto3
 from botocore.exceptions import ClientError
 from langchain.document_loaders import S3FileLoader
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.embeddings import BedrockEmbeddings
 from langchain.vectorstores.pgvector import PGVector
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 LOGGER = logging.getLogger(__name__)
 
 SQS_QUEUE_ENV_VAR = "QUEUE_URL"
 COLLECTION_ENV_VAR = "COLLECTION_NAME"
-API_KEY_SECRET_ENV_VAR = "API_KEY_SECRET_NAME"
 DB_SECRET_ENV_VAR = "DB_CREDS"
 
 
@@ -162,10 +162,9 @@ def get_secret_from_name(secret_name, kv=True):
     else:
         return get_secret_value_response["SecretString"]
 
-
 def lambda_handler(event, context):
     """What executes when the program is run"""
-
+    print (event)
     # configure python logger for Lambda
     _configure_logger()
     # silence chatty libraries for better logging
@@ -224,15 +223,10 @@ def lambda_handler(event, context):
     if not collection:
         raise MissingEnvironmentVariable(
             f"{COLLECTION_ENV_VAR} environment variable is required")
-    
-    openai_secret = os.environ.get(API_KEY_SECRET_ENV_VAR)
-    if not openai_secret:
-        raise MissingEnvironmentVariable(
-            f"{API_KEY_SECRET_ENV_VAR} environment variable is required")
-    os.environ["OPENAI_API_KEY"] = get_secret_from_name(
-        openai_secret, kv=False)
-    LOGGER.info("Fetching OpenAI embeddings")
-    embeddings = OpenAIEmbeddings()
+
+    LOGGER.info("Fetching Bedrock embeddings")
+    BEDROCK_CLIENT = boto3.client("bedrock-runtime", 'us-east-1')
+    embeddings = BedrockEmbeddings(model_id="amazon.titan-embed-text-v1", client=BEDROCK_CLIENT)
 
     LOGGER.info("Initializing vector store connection")
     store = PGVector(
@@ -246,7 +240,7 @@ def lambda_handler(event, context):
 
     LOGGER.info(
         f"Loading document: {body['file']} from bucket: {body['bucket']}") 
-    docs = loader.load()
+    docs = loader.load_and_split()
 
     LOGGER.info("Adding new document to the vector store")
     store.add_documents(docs)
